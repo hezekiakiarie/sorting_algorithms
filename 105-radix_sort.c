@@ -1,133 +1,101 @@
-#include "sort.h"
 #include <stdlib.h>
-
+#include "sort.h"
 /**
- * init_bucket_count - resets bucket_count values to 0
- * @bucket_count: array containing amounts of members for arrays in `buckets`
+ * csort2 - auxiliary function of radix sort
+ *
+ * @array: array of data to be sorted
+ * @buff: malloc buffer
+ * @size: size of data
+ * @lsd: Less significant digit
+ *
+ * Return: No Return
  */
-void init_bucket_count(int *bucket_count)
+void csort2(int *array, int **buff, int size, int lsd)
 {
-	int i;
+	int i, j, csize = 10, num;
+	int carr[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	int carr2[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-	for (i = 0; i < 10; i++)
-		bucket_count[i] = 0;
-}
-
-/**
- * build_buckets - allocates space for arrays to be held in `buckets`
- * @buckets: array of arrays each containing sorted members of `array`
- * @bucket_count: array containing amounts of members for arrays in `buckets`
- */
-void build_buckets(int *bucket_count, int **buckets)
-{
-	int *bucket;
-	int i;
-
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < size; i++)
 	{
-		bucket = malloc(sizeof(int) * bucket_count[i]);
-		if (!bucket)
+		num = array[i];
+		for (j = 0; j < lsd; j++)
+			if (j > 0)
+				num = num / 10;
+		num = num % 10;
+		buff[num][carr[num]] = array[i];
+		carr[num] += 1;
+	}
+
+	for (i = 0, j = 0; i < csize; i++)
+	{
+		while (carr[i] > 0)
 		{
-			for (; i > -1; i--)
-				free(buckets[i]);
-			free(buckets);
-			exit(EXIT_FAILURE);
+			array[j] = buff[i][carr2[i]];
+			carr2[i] += 1, carr[i] -= 1;
+			j++;
 		}
-		buckets[i] = bucket;
 	}
-	init_bucket_count(bucket_count);
-}
 
-/**
- * find_max - searches array of integers for highest value
- * @array: array of values to be searched
- * @size: number of elements in array
- * Return: largest integer stored in array
- */
-int find_max(int *array, size_t size)
-{
-	int max;
-	size_t i;
-
-	max = array[0];
-	for (i = 1; i < size; i++)
-		if (array[i] > max)
-			max = array[i];
-	return (max);
-}
-
-/**
- * into_array - flattens buckets into array sorted by current digit place,
- * then prints results and frees current buckets for next pass
- * @array: array of values to be printed
- * @size: number of elements in array
- * @buckets: array of arrays each containing sorted members of `array`
- * @bucket_count: array containing amounts of members for arrays in `buckets`
- */
-void into_array(int *array, size_t size, int **buckets, int *bucket_count)
-{
-	int i, j, k;
-
-	/* flatten bucket members in order into array sorted by place */
-	for (k = 0, i = 0; k < 10; k++)
-	{
-		for (j = 0; j < bucket_count[k]; j++, i++)
-			array[i] = buckets[k][j];
-	}
-	/* print results */
 	print_array(array, size);
-	/* free buckets from current pass */
-	for (i = 0; i < 10; i++)
-		free(buckets[i]);
 }
-
 /**
- * radix_sort - Sorts array of integers in ascending order using a Radix sort
- * alogrithm starting with the LSD, the 'least significant (1s place) digit',
- * and sorting by next digit to left. Size of `bucket_count` here determined
- * by max range of key variance (digits 0-9), other solutions may be needed for
- * much larger ranges.
- * @array: array of values to be sorted
- * @size: number of elements in array
+ * csort - auxiliary function of radix sort
+ *
+ * @array: array of data to be sorted
+ * @size: size of data
+ * @lsd: Less significant digit
+ *
+ * Return: No Return
+ */
+void csort(int *array, int size, int lsd)
+{
+	int carr[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	int i, j, num, csize = 10, **buff;
+
+	for (i = 0; i < size; i++)
+	{
+		num = array[i];
+		for (j = 0; j < lsd; j++)
+			if (j > 0)
+				num = num / 10;
+		num = num % 10;
+		carr[num] += 1;
+	}
+
+	if (carr[0] == size)
+		return;
+
+	buff = malloc(sizeof(int *) * 10);
+	if (!buff)
+		return;
+
+	for (i = 0; i < csize; i++)
+		if (carr[i] != 0)
+			buff[i] = malloc(sizeof(int) * carr[i]);
+
+
+	csort2(array, buff, size, lsd);
+
+	csort(array, size, lsd + 1);
+
+	for (i = 0; i < csize; i++)
+		if (carr[i] > 0)
+			free(buff[i]);
+	free(buff);
+}
+/**
+ * radix_sort - sorts an array of integers in ascending order using the Radix
+ * sort algorithm
+ *
+ * @array: array of data to be sorted
+ * @size: size of data
+ *
+ * Return: No Return
  */
 void radix_sort(int *array, size_t size)
 {
-	int **buckets;
-	int bucket_count[10];
-	int max, max_digits, pass, divisor, digit;
-	size_t i;
-
-	if (!array || size < 2)
+	if (size < 2)
 		return;
-	buckets = malloc(sizeof(int *) * 10);
-	if (!buckets)
-		exit(1);
-	/* find amount of places in largest element */
-	max = find_max(array, size);
-	for (max_digits = 0; max > 0; max_digits++)
-		max /= 10;
-	/* one sorting pass for each place in max_digits */
-	for (pass = 0, divisor = 1; pass < max_digits; pass++, divisor *= 10)
-	{
-		init_bucket_count(bucket_count);
-		/* find amount of members in each bucket */
-		for (i = 0; i < size; i++)
-		{
-			digit = (array[i] / divisor) % 10;
-			bucket_count[digit]++;
-		}
-		build_buckets(bucket_count, buckets);
-		/* fill buckets sorting by digit at current power of 10 */
-		for (i = 0; i < size; i++)
-		{
-			/* find digit of source element at that power of 10 */
-			digit = (array[i] / divisor) % 10;
-			/* place member of source array in digit's bucket */
-			buckets[digit][bucket_count[digit]] = array[i];
-			/* record increase in bucket fill level */
-			bucket_count[digit]++;
-		}
-		into_array(array, size, buckets, bucket_count);
-	}
-	free(buckets);
+	csort(array, size, 1);
 }

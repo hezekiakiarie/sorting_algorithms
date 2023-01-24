@@ -1,85 +1,105 @@
 #include "sort.h"
-#include <stdlib.h>
 #include <stdio.h>
+/**
+ * print_data - print data
+ * @msg: message
+ * @a: array
+ * @from: from
+ * @to: to
+ * Return: no return
+ */
+void print_data(char *msg, int *a, int from, int to)
+{
+	char *sep;
+	int i;
+
+	printf("[%s]: ", msg);
+	sep = "";
+
+	for (i = from; i <= to; i++)
+	{
+		printf("%s%d", sep, a[i]);
+		sep = ", ";
+	}
+	printf("\n");
+}
 
 /**
- * merge_sort - A function that sorts an array using merge algorithm.
- * @array: The array to sort.
- * @size: The size of the array.
- * Return: Nothing.
+ * merge - Auxiliar function for
+ * Merge sort algorithm
+ * @a: array
+ * @low: low index
+ * @middle: middle
+ * @high: high index
+ * @buff: buffer
+ * Return: no return
+ */
+void merge(int *a, int low, int middle, int high, int *buff)
+{
+	int lo, lm, i;
+
+	lo = i = low;
+	lm = middle + 1;
+
+	printf("Merging...\n");
+	print_data("left", a, low, middle);
+	print_data("right", a, middle + 1, high);
+
+	while (lo <= middle && lm <= high)
+	{
+		if (a[lo] < a[lm])
+			buff[i++] = a[lo++];
+		else
+			buff[i++] = a[lm++];
+	}
+
+	while (lo <= middle)
+		buff[i++] = a[lo++];
+
+	while (lm <= high)
+		buff[i++] = a[lm++];
+
+	for (i = low; i <= high; i++)
+		a[i] = buff[i];
+
+	print_data("Done", a, low, high);
+}
+/**
+ * msort -Auxiliar function for
+ * Merge sort algorithm
+ * @array: array
+ * @low: low index
+ * @high: high index
+ * @buffer: buffer
+ * Return: no return
+ */
+void msort(int *array, int low, int high, int *buffer)
+{
+	int midle;
+
+	if (low < high)
+	{
+		midle = (low + high - 1) / 2;
+		msort(array, low, midle, buffer);
+		msort(array, midle + 1, high, buffer);
+		merge(array, low, midle, high, buffer);
+	}
+}
+/**
+ * merge_sort -Sorts an arrayof integers
+ * in ascending order using the
+ * Merge sort algorithm
+ * @array: array
+ * @size: size
+ * Return: no return
  */
 void merge_sort(int *array, size_t size)
 {
-	size_t i = 0;
-	int *base = NULL;
+	int *buffer;
 
-	if (array == NULL || size < 2)
+	buffer = malloc(sizeof(int) * size);
+	if (!buffer)
 		return;
-	base = malloc(sizeof(int) * size);
-	if (base == NULL)
-		return;
-	for (; i < size; i++)
-		base[i] = array[i];
-	merge_partition(0, size, array, base);
-	free(base);
-}
-
-/**
- * merge - A function that sorts the subarrays.
- * @lo: Lower index.
- * @mi: Middle index.
- * @hi: Higher index.
- * @dest: Destination for data.
- * @src: Input data.
- * Return: Nothing
- */
-void merge(size_t lo, size_t mi, size_t hi, int *dest, int *src)
-{
-	size_t i = 0, j = 0, k = 0;
-
-	printf("Merging...\n");
-	printf("[left]: ");
-	print_array(src + lo, mi - lo);
-	printf("[right]: ");
-	print_array(src + mi, hi - mi);
-	i = lo;
-	j = mi;
-	k = lo;
-		for (; k < hi; k++)
-		{
-			if (i < mi && (j >= hi || src[i] <= src[j]))
-			{
-				dest[k] = src[i];
-				i++;
-			}
-			else
-			{
-				dest[k] = src[j];
-				j++;
-			}
-		}
-	printf("[Done]: ");
-	print_array(dest + lo, hi - lo);
-}
-
-/**
- * merge_partition - A funtion that splits the array recursively.
- * @lo: Lower index.
- * @hi: Higher index.
- * @array: The array to sort.
- * @base: The copy of the array.
- * Return: Nothing.
- */
-void merge_partition(size_t lo, size_t hi, int *array, int *base)
-{
-	size_t mi = 0;
-
-	if (hi - lo < 2)
-		return;
-	mi = (lo + hi) / 2;
-	merge_partition(lo, mi, array, base);
-	merge_partition(mi, hi, array, base);
-	merge(lo, mi, hi, array, base);
-	for (mi = lo; mi < hi; mi++)
-		base[mi] = array[mi];
+	msort(array, 0, size - 1, buffer);
+	free(buffer);
 }
