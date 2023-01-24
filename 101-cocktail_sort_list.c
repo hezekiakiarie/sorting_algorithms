@@ -111,3 +111,11 @@ void cocktail_sort_list(listint_t **list)
 	if (*list == NULL)
 		return;
 
+	limit1 = limit2 = NULL;
+	ptr = *list;
+
+	do {
+		increase_sort(&ptr, &limit1, list);
+		decrease_sort(&ptr, &limit2, list);
+	} while (limit1 != limit2);
+}
