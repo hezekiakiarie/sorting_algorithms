@@ -1,37 +1,50 @@
 #include "sort.h"
 
 /**
-  * shell_sort - A function tat sorts an array usin shell algorithm.
-  * @array: The array to sort.
-  * @size: The length of the array.
-  * Return: Nothing.
-  */
+ * knuth_max_gap - gets the max gap according the Knuth sequence
+ *
+ * @size: the size of the array
+ *
+ * Return: the max gap
+ */
+
+size_t knuth_max_gap(size_t size)
+{
+	size_t gap = 1;
+
+	while (gap < size)
+		gap = gap * 3 + 1;
+	if (gap >= size)
+		gap = (gap - 1) / 3;
+
+	return (gap);
+}
+
+/**
+ * shell_sort - sorts an array of integers using shell sort (Knuth sequence)
+ *
+ * @array: the array of integers
+ * @size: the size of the array
+ */
+
 void shell_sort(int *array, size_t size)
 {
-	unsigned int i = 0, j = 0, gap = 0;
-	int aux = 0;
+	size_t gap = 0, i, j;
+	int tmp;
 
-	if (array == NULL || size < 2)
-		return;
-
-	while (gap < size / 3)
-		gap = gap * 3 + 1;
-
-	for (; gap > 0; gap = (gap - 1) / 3)
+	gap = knuth_max_gap(size);
+	while (gap > 0)
 	{
 		for (i = gap; i < size; i++)
 		{
-			aux = array[i];
-			for (j = i; j >= gap && array[j - gap] > aux;
-					j -= gap)
-			{
-				if (array[j] != array[j - gap])
-					array[j] = array[j - gap];
-			}
-			if (array[j] != aux)
-				array[j] = aux;
+			tmp = array[i];
 
+			for (j = i; j >= gap && array[j - gap] > tmp; j -= gap)
+				array[j] = array[j - gap];
+
+			array[j] = tmp;
 		}
 		print_array(array, size);
+		gap = (gap - 1) / 3;
 	}
 }
